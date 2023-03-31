@@ -1,14 +1,16 @@
 package edu.uca.roman.proccontjson
 
-import android.content.Context
-import android.content.pm.ActivityInfo
-import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import edu.uca.roman.proccontjson.databinding.ActivityMainBinding
-import org.json.JSONException
-import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,57 +19,36 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        val conexion = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val status = conexion.activeNetworkInfo
+        val nombres = findViewById(R.id.etNombres) as EditText
+        val apellidos = findViewById(R.id.etApellidos) as EditText
+        val fechaNac = findViewById(R.id.etfechaNac) as EditText
+        val titulo = findViewById(R.id.etTitulo) as EditText
+        val email = findViewById(R.id.etEmail) as EditText
+        val facultad = findViewById(R.id.etFacultad) as EditText
+        //val btnGuardar = findViewById(R.id.btnGuardar) as Button
 
-        binding.btnGuardar.setOnClickListener() {
+        binding.btnGuardar.setOnClickListener{
 
-            if (status != null && status.isConnected) {
-                ejecutarDatos()
-            } else {
-                Toast.makeText(this, "Revise su conexion a internet", Toast.LENGTH_LONG).show()
-            }
+            var url: String = "http://192.168.1.20:80/ingresarcoordinador.php"; "nombres=" +
+                    nombres.text.toString() + "&apellidos=" + apellidos.text.toString() +
+                    "&fechaNac=" + fechaNac.text.toString() + "&titulo=" + titulo.text.toString() +
+                    "&email=" + email.text.toString() + "&facultad=" + facultad.text.toString()
+
+            var rq: RequestQueue = Volley.newRequestQueue(this)
+
+            var jos = JsonObjectRequest(Request.Method.POST,url, null, { response ->
+                Toast.makeText(this, "Coordinador Añadido", Toast.LENGTH_LONG).show()
+            }, { error ->
+            })
+            rq.add(jos)
+
         }
+
     }
+
 }
-    private fun ejecutarDatos() {
-        val nombres: String = etNombres?.text.toString()
-        val apellidos: String = etApellidos?.text.toString()
-        val fechaNac: String = etfechaNac?.text.toString()
-        val titulo: String = etTitulo?.text.toString()
-        val email: String = etEmail?.text.toString()
-        val facultad: String = etFacultad?.text.toString()
 
-        val url = "http://192.168.1.20/ProcContJSON/ingresarcoordinador.php"
-
-        val stringRequest = object : StringRequest(
-            Request.Method.POST, url,
-            Response.Listener<String> { response ->
-                try {
-                    val obj = JSONObject(response)
-                    Toast.makeText(applicationContext, obj.getString("message"), Toast.LENGTH_LONG).show()
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                }
-            },
-            Response.ErrorListener { volleyError -> Toast.makeText(applicationContext, volleyError.message, Toast.LENGTH_LONG).show() }) {
-            @Throws(AuthFailureError::class)
-            override fun getParams(): Map<String, String> {
-                val params = HashMap<String, String>()
-                params.put("Nombres", nombres)
-                params.put("Apellidos", apellidos)
-                params.put("fechaNac", fechaNac)
-                params.put("Titulo", titulo)
-                params.put("Email", email)
-                params.put("Facultad", facultad)
-                return params
-            }
-        }
-
-        VolleySingleton.instance?.addToRequestQueue(stringRequest)
-    }
 
 
 
